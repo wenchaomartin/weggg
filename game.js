@@ -3,17 +3,26 @@ class Vector {
         this.x = x;
         this.y = y;
     }
+    plus(that){
+        return new Vector(this.x + that.x, this.y + that.y);
+    }
+    scale(dt){
+        return new Vector(this.x *dt, this.y *dt);
+    }
 }
 
 let keydown = new Set();
 let start=0;
+let circle = new Vector(100,100);
+
+
 
 
 (() => {
     let r = 50
     let cx = 100
     let cy = 100
-    let speed = 1000
+    let speed = 500
     //todo circle move not smooth
     canvas = document.getElementById("canvas")
     canvas.height = window.innerHeight
@@ -45,6 +54,15 @@ let start=0;
     });
 
 
+    function draw(context,pos,r){
+        console.log(circle.x, circle.y)
+        context.clearRect(0, 0, canvas.width, canvas.height)
+        context.beginPath();
+        context.arc(pos.x, pos.y , r, 0, 2 * Math.PI, false);
+        context.fillStyle = '#FF0000';
+        context.fill();
+    }
+
 
     function step(timestamp) {
         let dt = 0;
@@ -61,19 +79,11 @@ let start=0;
         for(e of  keydown.values()){
             if (e in directtionMap) {
                 let v = directtionMap[e]
-                sx = v.x * dt
-                sy = v.y * dt
-                cx+= sx
-                cy+= sy
+                circle = circle.plus(v.scale(dt))
             }
         }
         
-        console.log(sx, sy)
-        context.clearRect(0, 0, canvas.width, canvas.height)
-        context.beginPath();
-        context.arc(cx, cy , r, 0, 2 * Math.PI, false);
-        context.fillStyle = '#FF0000';
-        context.fill();
+        draw(context,circle,r)
 
         window.requestAnimationFrame(step)
     }
