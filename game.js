@@ -1,7 +1,11 @@
 
 canvas = document.getElementById("canvas");
+
 canvas.height = window.innerHeight;
 canvas.width = window.innerWidth;
+let height = canvas.height;
+let width = canvas.width;
+
 context = canvas.getContext("2d");
 
 function draw(context, pos, r, color = "red") {
@@ -60,6 +64,8 @@ let cy = 100;
 let speed = 500;
 let bulletSpeed = 2000;
 let bullet_radius = 10;
+let enermySpeed = 200
+
 let directionMap = {
   KeyA: new Vector(-speed, 0),
   KeyD: new Vector(speed, 0),
@@ -78,11 +84,28 @@ class Player{
   }
 }
 
+class Enermy {
+  constructor(pos,vel){
+    this.pos = pos
+    this.vel =vel
+  }
+
+  update(dt){
+    this.pos = this.pos.plus(this.vel.scale(dt*enermySpeed));
+  }
+
+  render(context){
+    draw(context,this.pos,r,'blue');
+  }
+}
+
 class Game{
   constructor(){
     this.player = new Player(new Vector(100, 100),new Vector(0,0))
     this.bullets = []
     this.keyPressed = new Set();
+    this.enermies = new Set();
+    
   }
 
   update(dt){
@@ -93,10 +116,21 @@ class Game{
         }
       }
 
+
       this.bullets = bullets.filter(bullet => !(bullet.pos.x < 0 || bullet.pos.y < 0 || bullet.pos.x > canvas.width || bullet.pos.y > canvas.height))
       for(let b of bullets){
           b.update(dt)
       }
+
+      let enermyPos = new Vector(Math.random() *width,Math.random() *height)
+      let vel = this.player.pos.minus(enermyPos).normal()
+      
+      let e = new Enermy(enermyPos, vel)
+      if(this.enermies.size<1000){
+         this.enermies.add(e)
+      }
+      this.enermies.forEach(e=>e.update(dt))
+      this.enermies.forEach(e=>e.render(context))
       
   }
 
