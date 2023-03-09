@@ -5,6 +5,9 @@ canvas.width = window.innerWidth;
 let height = canvas.height;
 let width = canvas.width;
 
+
+let distance = 2000
+
 context = canvas.getContext("2d");
 
 function draw(context, pos, r, color = "red") {
@@ -40,6 +43,9 @@ class Vector {
         return new Vector(this.x / this.len(), this.y / this.len());
     }
 
+    static proV2(len, angle) {
+        return new Vector(len * Math.cos(angle), len * Math.sin(angle))
+    }
 
 }
 
@@ -71,6 +77,8 @@ let speed = 500;
 let bulletSpeed = 2000;
 let bullet_radius = 10;
 let enemySpeed = 200
+let spawnRate = 1
+let currentRate = spawnRate
 
 let directionMap = {
     KeyA: new Vector(-speed, 0),
@@ -91,18 +99,23 @@ class Player {
 }
 
 class Enemy {
-    constructor(pos, vel) {
+    constructor(pos) {
         this.pos = pos
-        this.vel = vel
+
     }
 
-    update(dt) {
-        this.pos = this.pos.plus(this.vel.scale(dt * enemySpeed));
+    update(dt, toPos) {
+        this.pos = this.pos.plus(toPos.minus(this.pos).normal().scale(dt * enemySpeed))
     }
 
     render(context) {
         draw(context, this.pos, r, 'blue');
     }
+}
+
+function spawnEnemies(toPos) {
+    let enemyPos = Vector.proV2(distance * Math.random(), 2 * Math.PI * Math.random()).plus(toPos)
+    return new Enemy(enemyPos)
 }
 
 class Game {
@@ -126,26 +139,26 @@ class Game {
         for (let b of bullets) {
             b.update(dt)
         }
-
-        let enemyPos = new Vector(Math.random() * width, Math.random() * height)
-        let vel = this.player.pos.minus(enemyPos).normal()
-
-        let e = new Enemy(enemyPos, vel)
-        if (this.enermies.size < 1000) {
-            this.enermies.add(e)
+        currentRate = currentRate - dt
+        if (currentRate < 0) {
+            currentRate = spawnRate
+            this.enermies.add(spawnEnemies(this.player.pos))
         }
 
 
-        this.enermies.forEach(e => e.update(dt))
-        this.enermies.forEach(e => e.render(context))
+        this.enermies.forEach(e => e.update(dt, this.player.pos))
 
     }
 
     render(context) {
+        context.clearRect(0, 0, canvas.width, canvas.height);
         this.player.render(context)
         for (let b of this.bullets) {
             b.render(context)
         }
+
+
+        this.enermies.forEach(e => e.render(context))
     }
 
     keydown(e) {
@@ -177,7 +190,7 @@ class Game {
             dt = (timestamp - start) * 0.001;
             start = timestamp;
         }
-        context.clearRect(0, 0, canvas.width, canvas.height);
+
         game.update(dt)
         game.render(context);
 
