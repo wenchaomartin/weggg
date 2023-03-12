@@ -129,6 +129,7 @@ class Particle {
 class Enemy {
     constructor(pos) {
         this.pos = pos
+        this.dead = false
 
     }
 
@@ -151,7 +152,7 @@ class Game {
         this.player = new Player(new Vector(100, 100), new Vector(0, 0))
         this.bullets = []
         this.keyPressed = new Set();
-        this.enermies = new Set();
+        this.enermies = [];
         this.particles = []
 
     }
@@ -172,12 +173,13 @@ class Game {
         currentRate = currentRate - dt
         if (currentRate < 0) {
             currentRate = spawnRate
-            this.enermies.add(spawnEnemies(this.player.pos))
+            this.enermies.push(spawnEnemies(this.player.pos))
         }
 
         for (let b of bullets) {
             for (let e of this.enermies) {
                 if (b.pos.distance(e.pos)<r + bullet_radius) {
+                    e.dead = true
                     let N = Math.random()*6+1
                     for(let i=0;i<N;i++) {
                         let angle = Math.random()*2*Math.PI
@@ -187,6 +189,8 @@ class Game {
             }
         }
 
+
+        this.enermies = this.enermies.filter(e=>!e.dead)
 
         this.enermies.forEach(e => e.update(dt, this.player.pos))
         this.particles.forEach(e => e.update(dt))
@@ -199,7 +203,6 @@ class Game {
         for (let b of this.bullets) {
             b.render(context)
         }
-
 
         this.enermies.forEach(e => e.render(context))
         this.particles.forEach(e => e.render(context))
